@@ -1067,7 +1067,7 @@
     taiDanhSachTK();
   }
   async function taiDanhSachTK() {
-    const kq = await goiAPI_Get('danhsachtk', { token });
+    const kq = await goiAPI_Post({ action: 'danhsachtk', token });
     if (!kq.thanhCong) { document.getElementById('noiDungChiTiet').innerHTML = `<p>${kq.thongBao}</p>`; return; }
     let html = `
       <h3 style="font-family:var(--font-serif); font-size:18px; margin-bottom:16px;">Quản trị tài khoản</h3>
@@ -1084,7 +1084,7 @@
       <div class="the-tk">
         <div class="ten-tk">${ch(tk.tenPhong)} ${tk.vaiTro === 'Admin' ? '👑' : ''}</div>
         <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">Tên đăng nhập: <b style="color:var(--text)">${ch(tk.tenDangNhap) || '—'}</b></div>
-        <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Mật khẩu: <b style="color:var(--text)">${tk.matKhau}</b></div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Mật khẩu: <i style="color:var(--text-dim)">đã mã hóa, không thể xem lại — chỉ có thể đặt lại mật khẩu mới</i></div>
         <div class="hang-nut">
           <button class="btn-sm vang" onclick="doiMK(${tk.dong})">Đổi mật khẩu</button>
           ${tk.vaiTro !== 'Admin' ? `<button class="btn-sm do" onclick="xoaTK(${tk.dong})">Xóa</button>` : ''}
