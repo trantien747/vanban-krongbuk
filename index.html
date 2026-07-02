@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hệ thống theo dõi văn bản - UBND Xã Krông Búk</title>
+<style>
+  :root {
+    --bg: #0b0f1a; --bg-card: #131a2b; --bg-card2: #0f1524;
+    --border: #1e2a42; --text: #e5e9f2; --text-dim: #8b95ab;
+    --red: #dc2626; --red2: #991b1b;
+    --blue: #3b82f6; --amber: #f59e0b; --purple: #8b5cf6; --green: #10b981; --pink: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding-bottom: 40px; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0;
+    background: rgba(11,15,26,0.95); backdrop-filter: blur(6px); z-index: 50;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .btn-menu { background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+    width: 42px; height: 42px; border-radius: 10px; cursor: pointer; font-size: 18px; }
+  .topbar h1 { font-size: 20px; font-weight: 700; }
+  .topbar-right { display: flex; gap: 10px; align-items: center; }
+  .badge-mode { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 8px 14px; border-radius: 20px; font-size: 13px; }
+  .btn-baocao { background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px; }
+  .btn-baocao:hover { border-color: var(--blue); }
+  .btn-dangnhap { background: var(--red); border: none; color: #fff; padding: 9px 18px;
+    border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+  .banner { background: linear-gradient(120deg, var(--red), var(--red2));
+    border-radius: 18px; padding: 28px; display: flex; align-items: center; gap: 22px;
+    position: relative; overflow: hidden; margin-bottom: 22px; }
+  .banner::after { content: '★'; position: absolute; right: 30px; top: 50%; transform: translateY(-50%);
+    font-size: 160px; color: rgba(255,255,255,0.08); }
+  .banner img { width: 88px; height: 88px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.5);
+    object-fit: cover; background: #fff; z-index: 1; }
+  .banner-text { z-index: 1; }
+  .banner-text h2 { font-size: 26px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .banner-text .dia-chi { font-size: 15px; opacity: 0.9; margin-bottom: 8px; }
+  .banner-text .tagline { font-size: 14px; font-style: italic; opacity: 0.85; }
+
+  .grid-thongke { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px; margin-bottom: 22px; }
+  .o-thongke { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; position: relative; overflow: hidden; }
+  .o-thongke::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .o-thongke.c-tong::before { background: var(--blue); }
+  .o-thongke.c-chuaxl::before { background: var(--amber); }
+  .o-thongke.c-dangxl::before { background: var(--purple); }
+  .o-thongke.c-hoantat::before { background: var(--green); }
+  .o-thongke.c-quahan::before { background: var(--pink); }
+  .o-thongke .nhan-tren { font-size: 11px; letter-spacing: 1px; color: var(--text-dim); font-weight: 700; }
+  .o-thongke .so-lon { font-size: 40px; font-weight: 800; margin: 8px 0 4px; }
+  .o-thongke.c-tong .so-lon { color: var(--blue); }
+  .o-thongke.c-chuaxl .so-lon { color: var(--amber); }
+  .o-thongke.c-dangxl .so-lon { color: var(--purple); }
+  .o-thongke.c-hoantat .so-lon { color: var(--green); }
+  .o-thongke.c-quahan .so-lon { color: var(--pink); }
+  .o-thongke .nhan-duoi { font-size: 13px; color: var(--text-dim); }
+
+  .khoi { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; margin-bottom: 18px; }
+  .khoi h3 { font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .khoi h3 .dem { background: var(--bg-card2); color: var(--amber); font-size: 12px;
+    padding: 2px 10px; border-radius: 10px; margin-left: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--text-dim); font-size: 11px; letter-spacing: 0.5px;
+    padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  td { padding: 12px 8px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  .rong { text-align: center; padding: 50px 20px; color: var(--text-dim); }
+  .rong .icon { font-size: 40px; margin-bottom: 10px; }
+
+  .nhan-trangthai { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+  .nhan-trangthai.chuaxl { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .nhan-trangthai.dangxl { background: rgba(139,92,246,0.15); color: var(--purple); }
+  .nhan-trangthai.hoanthanh { background: rgba(16,185,129,0.15); color: var(--green); }
+  .nhan-trangthai.quahan { background: rgba(239,68,68,0.15); color: var(--pink); }
+
+  .the-phong { padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .the-phong:last-child { border-bottom: none; }
+  .the-phong .hang { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+  .the-phong .hang b { font-weight: 700; }
+  .the-phong .hang span { color: var(--text-dim); font-size: 12px; }
+  .thanh-nen { width: 100%; height: 8px; background: var(--bg-card2); border-radius: 6px; overflow: hidden; }
+  .thanh-fill { height: 100%; background: linear-gradient(90deg, var(--green), #22c55e); border-radius: 6px; }
+  .chi-tiet-phong { display: none; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); }
+  .dong-mini { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; font-size: 12px; }
+  .dong-mini .sky { color: var(--blue); font-weight: 700; min-width: 100px; }
+  .dong-mini .ty { color: var(--text-dim); flex: 1; }
+
+  .khoi-donut { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  .donut { width: 150px; height: 150px; border-radius: 50%; flex-shrink: 0; }
+  .chu-thich { display: flex; flex-direction: column; gap: 10px; }
+  .chu-thich-dong { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .cham { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* MENU TRƯỢT */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 90; }
+  .overlay.hien { display: block; }
+  .drawer { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--bg-card);
+    border-right: 1px solid var(--border); z-index: 91; transition: left 0.25s; padding: 20px; overflow-y: auto; }
+  .drawer.hien { left: 0; }
+  .drawer h3 { margin-bottom: 16px; color: var(--red); }
+  .drawer-item { display: block; width: 100%; text-align: left; background: none; border: none; color: var(--text);
+    padding: 12px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-bottom: 4px; }
+  .drawer-item:hover { background: var(--bg-card2); }
+  .drawer-item.active { background: var(--red); }
+
+  /* MODAL */
+  .modal-nen { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none;
+    align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-nen.hien { display: flex; }
+  .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 28px; max-width: 400px; width: 100%; }
+  .modal-box h2 { margin-bottom: 20px; text-align: center; }
+  .modal-box input, .modal-box textarea { width: 100%; padding: 12px; margin-bottom: 12px;
+    background: var(--bg-card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+  .modal-box textarea { min-height: 60px; resize: vertical; }
+  .btn-full { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px;
+    font-weight: 700; cursor: pointer; margin-bottom: 8px; }
+  .btn-full.chinh { background: var(--red); color: #fff; }
+  .btn-full.phu { background: var(--bg-card2); color: var(--text-dim); border: 1px solid var(--border); }
+  .loi-text { color: var(--pink); font-size: 13px; text-align: center; margin-top: 6px; }
+
+  /* DASHBOARD PHÒNG / ADMIN */
+  #manDashboard, #manAdmin { display: none; }
+
+  .tab-bar { display: flex; gap: 8px; margin-bottom: 18px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 12px; padding: 6px; }
+  .tab-btn { flex: 1; background: none; border: none; color: var(--text-dim); padding: 12px 10px;
+    border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; gap: 6px; }
+  .tab-btn.active { background: var(--red); color: #fff; }
+  .tab-btn .so-dem { background: rgba(255,255,255,0.2); padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+  .tab-btn:not(.active) .so-dem { background: var(--bg-card2); color: var(--text-dim); }
+
+  .the-nhiemvu { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--text-dim); }
+  .the-nhiemvu.qh { border-left-color: var(--pink); }
+  .the-nhiemvu.gan { border-left-color: var(--amber); }
+  .the-nhiemvu.xong { border-left-color: var(--green); opacity: 0.85; }
+  .the-nhiemvu.choxn { border-left-color: var(--purple); }
+  .the-nhiemvu .sky { font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+  .the-nhiemvu .ty { font-size: 13px; margin-bottom: 4px; }
+  .the-nhiemvu .tt { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; }
+  .hang-nut { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .btn-sm { padding: 7px 14px; border: none; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .btn-sm.xanh { background: var(--green); color: #fff; }
+  .btn-sm.tim { background: var(--purple); color: #fff; }
+  .btn-sm.do { background: var(--pink); color: #fff; }
+  .btn-sm.link { background: transparent; color: var(--blue); border: 1px solid var(--blue); }
+  .form-hoanthanh { display: none; margin-top: 10px; }
+  .khoi-upload { background: var(--bg-card2); border: 1px dashed var(--border); border-radius: 12px;
+    padding: 18px; margin-bottom: 18px; text-align: center; }
+  .khoi-upload input[type=file] { margin-top: 10px; color: var(--text-dim); font-size: 13px; }
+  .khoi-upload.uu-tien { border-color: var(--red); }
+
+  footer { text-align: center; padding: 24px 20px; color: var(--text-dim); font-size: 12px;
+    border-top: 1px solid var(--border); margin-top: 30px; }
+  footer b { color: var(--text); }
+
+  @media (max-width: 640px) {
+    .banner { flex-direction: column; text-align: center; }
+    .banner-text h2 { font-size: 20px; }
+    .khoi-donut { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="btn-menu" onclick="moDrawer()">☰</button>
+    <h1>Tổng quan</h1>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-mode" id="badgeMode">Chỉ xem</span>
+    <button class="btn-baocao" onclick="xuatBaoCao()">📄 Xuất báo cáo</button>
+    <button class="btn-dangnhap" id="btnDangNhapTop" onclick="moModalDangNhap()">Đăng nhập</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="banner">
+    <img src="logo.png" alt="Logo UBND Xã Krông Búk" onerror="this.style.display='none'">
+    <div class="banner-text">
+      <h2>HỆ THỐNG THEO DÕI VĂN BẢN</h2>
+      <div class="dia-chi">UBND Xã Krông Búk · Tỉnh Đắk Lắk</div>
+      <div class="tagline">"Nâng cao hiệu quả quản lý và xử lý văn bản hành chính"</div>
+    </div>
+  </div>
+
+  <!-- TỔNG QUAN CÔNG KHAI -->
+  <div id="manTongQuan">
+    <div class="grid-thongke" id="oThongKe"></div>
+
+    <div class="khoi">
+      <h3>🕒 VĂN BẢN SẮP ĐẾN HẠN <span class="dem" id="demSapHan">0</span></h3>
+      <div id="bangSapHan"></div>
+    </div>
+
+    <div class="khoi">
+      <h3>🏢 VĂN BẢN THEO PHÒNG BAN</h3>
+      <div id="dsPhongBan"></div>
+    </div>
+
+    <div class="khoi">
+      <h3>📊 TRẠNG THÁI XỬ LÝ</h3>
+      <div class="khoi-donut">
+        <div class="donut" id="bieuDoDonut"></div>
+        <div class="chu-thich" id="chuThichDonut"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PHÒNG -->
+  <div id="manDashboard">
+
+    <div class="khoi-upload uu-tien" id="khoiTaiVanBanCanTheoDoi" style="display:none;">
+      <b>📥 Tải văn bản cần theo dõi</b>
+      <p style="font-size:12px;color:var(--text-dim);margin-top:6px;">Hệ thống AI sẽ tự động phân tích và giao cho đúng phòng phụ trách.</p>
+      <input type="file" id="fileVanBanCanTheoDoi" accept=".pdf,.doc,.docx,.jpg,.png">
+      <br>
+      <button class="btn-sm do" style="margin-top:10px;" onclick="taiLenVanBanCanTheoDoi()">Tải lên hệ thống</button>
+      <div id="ketQuaTaiVanBanCanTheoDoi" style="font-size:13px;margin-top:10px;"></div>
+    </div>
+
+    <div class="khoi-upload">
+      <b>📤 Tải văn bản đã thực hiện</b>
+      <p style="font-size:12px;color:var(--text-dim);margin-top:6px;">Hệ thống AI sẽ tự động đối chiếu với danh sách nhiệm vụ của phòng bạn.</p>
+      <input type="file" id="fileUpload" accept=".pdf,.doc,.docx,.jpg,.png">
+      <br>
+      <button class="btn-sm xanh" style="margin-top:10px;" onclick="taiLenVanBan()">Tải lên</button>
+      <div id="ketQuaUpload" style="font-size:13px;margin-top:10px;"></div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabDangXL" onclick="doiTabNhiemVu('dangxuly')">
+        📋 Đang xử lý <span class="so-dem" id="demTabDang">0</span>
+      </button>
+      <button class="tab-btn" id="tabDaXL" onclick="doiTabNhiemVu('daxuly')">
+        ✅ Đã xử lý <span class="so-dem" id="demTabDa">0</span>
+      </button>
+    </div>
+
+    <div id="dsNhiemVuPhong"></div>
+  </div>
+
+  <!-- MÀN ADMIN -->
+  <div id="manAdmin">
+    <div class="khoi">
+      <h3>➕ Thêm tài khoản mới</h3>
+      <input type="text" id="tenTKMoi" placeholder="Tên phòng/đơn vị">
+      <input type="text" id="mkTKMoi" placeholder="Mật khẩu">
+      <button class="btn-full chinh" onclick="themTaiKhoanMoi()">Thêm tài khoản</button>
+    </div>
+    <div id="dsTaiKhoanAdmin"></div>
+  </div>
+
+</div>
+
+<footer>
+  UBND Xã Krông Búk · Tỉnh Đắk Lắk<br>
+  Phát triển bởi <b>Trần Văn Tiến</b> · 📞 0973141747
+</footer>
+
+<!-- DRAWER MENU -->
+<div class="overlay" id="overlay" onclick="dongDrawer()"></div>
+<div class="drawer" id="drawer">
+  <h3>📋 Menu</h3>
+  <button class="drawer-item active" onclick="veTrangChu()">🏠 Tổng quan</button>
+  <button class="drawer-item" id="menuDashboard" style="display:none;" onclick="hienDashboard()">📁 Nhiệm vụ của tôi</button>
+  <button class="drawer-item" id="menuAdmin" style="display:none;" onclick="hienAdmin()">🔑 Quản trị tài khoản</button>
+  <button class="drawer-item" id="menuDangNhap" onclick="moModalDangNhap()">🔒 Đăng nhập</button>
+  <button class="drawer-item" id="menuDangXuat" style="display:none;" onclick="dangXuat()">🚪 Đăng xuất</button>
+</div>
+
+<!-- MODAL ĐĂNG NHẬP -->
+<div class="modal-nen" id="modalDangNhap">
+  <div class="modal-box">
+    <h2>🔒 Đăng nhập</h2>
+    <input type="text" id="inputTaiKhoan" placeholder="Tên phòng/đơn vị hoặc Quản trị viên">
+    <input type="password" id="inputMatKhau" placeholder="Mật khẩu">
+    <button class="btn-full chinh" onclick="xuLyDangNhap()">Đăng nhập</button>
+    <button class="btn-full phu" onclick="dongModalDangNhap()">Hủy</button>
+    <div class="loi-text" id="loiDangNhap"></div>
+  </div>
+</div>
+
+<script>
+  // ============ CẤU HÌNH ============
+  const API_URL = 'https://script.google.com/macros/s/AKfycbxDXhAqodFB_EPtYNKSwayKCQW27goxmp-egGIQRzlQgWa3-kKwtORvj-MxLQ0qC0lE/exec';
+  const PHONG_DUOC_TAI_VANBAN_CAN_THEO_DOI = 'Văn phòng HĐND-UBND';
+
+  let token = null;
+  let vaiTroHienTai = null;
+  let danhSachNhiemVuPhong = [];
+  let tabNhiemVuHienTai = 'dangxuly';
+
+  window.onload = function() { taiTongQuan(); };
+
+  // ================= GỌI API =================
+  async function goiAPI_Get(action, params) {
+    let url = `${API_URL}?action=${action}`;
+    if (params) for (const k in params) url += `&${k}=${encodeURIComponent(params[k])}`;
+    const res = await fetch(url);
+    return res.json();
+  }
+
+  async function goiAPI_Post(body) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body)
+    });
+    return res.json();
+  }
+
+  // ================= DRAWER =================
+  function moDrawer() { document.getElementById('drawer').classList.add('hien'); document.getElementById('overlay').classList.add('hien'); }
+  function dongDrawer() { document.getElementById('drawer').classList.remove('hien'); document.getElementById('overlay').classList.remove('hien'); }
+
+  function veTrangChu() {
+    dongDrawer();
+    document.getElementById('manDashboard').style.display = 'none';
+    document.getElementById('manAdmin').style.display = 'none';
+    document.getElementById('manTongQuan').style.display = 'block';
+    setActiveMenu(0);
+    taiTongQuan();
+  }
+  function setActiveMenu(idx) {
+    document.querySelectorAll('.drawer-item').forEach((el,i)=> el.classList.toggle('active', i===idx));
+  }
+
+  // ================= ĐĂNG NHẬP =================
+  function moModalDangNhap() { dongDrawer(); document.getElementById('modalDangNhap').classList.add('hien'); }
+  function dongModalDangNhap() { document.getElementById('modalDangNhap').classList.remove('hien'); document.getElementById('loiDangNhap').textContent=''; }
+
+  async function xuLyDangNhap() {
+    const ten = document.getElementById('inputTaiKhoan').value.trim();
+    const mk = document.getElementById('inputMatKhau').value;
+    const loiEl = document.getElementById('loiDangNhap');
+    if (!ten || !mk) { loiEl.textContent = 'Vui lòng nhập đủ thông tin.'; return; }
+
+    try {
+      const kq = await goiAPI_Post({ action: 'dangNhap', tenTaiKhoan: ten, matKhau: mk });
+      if (kq.thanhCong) {
+        token = kq.token; vaiTroHienTai = kq.vaiTro;
+        localStorage.setItem('tvt_token', token);
+        localStorage.setItem('tvt_vaitro', vaiTroHienTai);
+        localStorage.setItem('tvt_ten', kq.tenPhong);
+        dongModalDangNhap();
+        capNhatGiaoDienDangNhap();
+        if (vaiTroHienTai === 'Admin') hienAdmin(); else hienDashboard();
+      } else {
+        loiEl.textContent = kq.thongBao;
+      }
+    } catch (e) { loiEl.textContent = 'Lỗi kết nối: ' + e.message; }
+  }
+
+  function dangXuat() {
+    if (token) goiAPI_Post({ action: 'dangXuat', token: token });
+    token = null; vaiTroHienTai = null;
+    localStorage.removeItem('tvt_token'); localStorage.removeItem('tvt_vaitro'); localStorage.removeItem('tvt_ten');
+    capNhatGiaoDienDangNhap();
+    veTrangChu();
+  }
+
+  function capNhatGiaoDienDangNhap() {
+    const daDangNhap = !!token;
+    document.getElementById('badgeMode').textContent = daDangNhap ? (vaiTroHienTai === 'Admin' ? '👑 Admin' : '🔓 ' + localStorage.getItem('tvt_ten')) : 'Chỉ xem';
+    document.getElementById('btnDangNhapTop').textContent = daDangNhap ? 'Đăng xuất' : 'Đăng nhập';
+    document.getElementById('btnDangNhapTop').onclick = daDangNhap ? dangXuat : moModalDangNhap;
+    document.getElementById('menuDangNhap').style.display = daDangNhap ? 'none' : 'block';
+    document.getElementById('menuDangXuat').style.display = daDangNhap ? 'block' : 'none';
+    document.getElementById('menuDashboard').style.display = (daDangNhap && vaiTroHienTai !== 'Admin') ? 'block' : 'none';
+    document.getElementById('menuAdmin').style.display = (daDangNhap && vaiTroHienTai === 'Admin') ? 'block' : 'none';
+  }
+
+  (function khoiPhucPhien() {
+    const t = localStorage.getItem('tvt_token');
+    if (t) { token = t; vaiTroHienTai = localStorage.getItem('tvt_vaitro'); capNhatGiaoDienDangNhap(); }
+  })();
+
+  // ================= TỔNG QUAN CÔNG KHAI =================
+  async function taiTongQuan() {
+    const kq = await goiAPI_Get('tongquan');
+    if (!kq.thanhCong) return;
+    hienThiTongQuan(kq.theoPhong);
+  }
+
+  function phanLoaiHan(hanStr, trangThai) {
+    if (trangThai === 'Hoàn thành') return 'xong';
+    if (trangThai === 'Chờ xác nhận') return 'choxn';
+    if (!hanStr) return '';
+    const p = hanStr.split('-'); if (p.length !== 3) return '';
+    const han = new Date(p[2], p[1]-1, p[0]); const homNay = new Date(); homNay.setHours(0,0,0,0);
+    const soNgay = Math.round((han - homNay) / 86400000);
+    if (soNgay < 0) return 'qh';
+    if (soNgay <= 3) return 'gan';
+    return '';
+  }
+
+  function hienThiTongQuan(theoPhong) {
+    let tong=0, chuaXL=0, dangXL=0, hoanTat=0, quaHan=0;
+    const sapDenHan = [];
+    const dsPhong = Object.keys(theoPhong);
+
+    dsPhong.forEach(phong => {
+      theoPhong[phong].forEach(vb => {
+        tong++;
+        if (vb.trangThai === 'Hoàn thành') hoanTat++;
+        else if (vb.trangThai === 'Chờ xác nhận') dangXL++;
+        else {
+          chuaXL++;
+          const lop = phanLoaiHan(vb.hanXuLy, vb.trangThai);
+          if (lop === 'qh') quaHan++;
+          if (lop === 'gan') sapDenHan.push({ ...vb, phong });
+        }
+      });
+    });
+
+    document.getElementById('oThongKe').innerHTML = `
+      <div class="o-thongke c-tong"><div class="nhan-tren">TỔNG VĂN BẢN</div><div class="so-lon">${tong}</div><div class="nhan-duoi">Tất cả</div></div>
+      <div class="o-thongke c-chuaxl"><div class="nhan-tren">CHƯA XỬ LÝ</div><div class="so-lon">${chuaXL}</div><div class="nhan-duoi">Cần xử lý ngay</div></div>
+      <div class="o-thongke c-dangxl"><div class="nhan-tren">ĐANG XỬ LÝ</div><div class="so-lon">${dangXL}</div><div class="nhan-duoi">Chờ xác nhận</div></div>
+      <div class="o-thongke c-hoantat"><div class="nhan-tren">HOÀN TẤT</div><div class="so-lon">${hoanTat}</div><div class="nhan-duoi">Đã xong</div></div>
+      <div class="o-thongke c-quahan"><div class="nhan-tren">QUÁ HẠN</div><div class="so-lon">${quaHan}</div><div class="nhan-duoi">Xử lý khẩn</div></div>
+    `;
+
+    document.getElementById('demSapHan').textContent = sapDenHan.length;
+    document.getElementById('bangSapHan').innerHTML = sapDenHan.length === 0
+      ? `<div class="rong"><div class="icon">📅</div>Không có văn bản sắp đến hạn trong 7 ngày tới</div>`
+      : `<table><thead><tr><th>SỐ KÝ HIỆU</th><th>TRÍCH YẾU</th><th>PHÒNG XỬ LÝ</th><th>HẠN XỬ LÝ</th><th>TRẠNG THÁI</th></tr></thead>
+         <tbody>${sapDenHan.map(v => `<tr><td>${v.soKyHieu}</td><td>${v.trichYeu}</td><td>${v.phong}</td><td>${v.hanXuLy}</td>
+         <td><span class="nhan-trangthai gan">Sắp đến hạn</span></td></tr>`).join('')}</tbody></table>`;
+
+    document.getElementById('dsPhongBan').innerHTML = dsPhong.length === 0
+      ? `<div class="rong">Chưa có dữ liệu</div>`
+      : dsPhong.map((phong, idx) => {
+          const list = theoPhong[phong];
+          const soXong = list.filter(v => v.trangThai === 'Hoàn thành').length;
+          const pt = Math.round((soXong/list.length)*100);
+          return `<div class="the-phong" onclick="toggleChiTietPhong(${idx})">
+            <div class="hang"><b>${phong}</b><span>${soXong}/${list.length} (${pt}%)</span></div>
+            <div class="thanh-nen"><div class="thanh-fill" style="width:${pt}%"></div></div>
+            <div class="chi-tiet-phong" id="ctphong-${idx}">
+              ${list.map(v => `<div class="dong-mini"><span class="sky">${v.soKyHieu}</span><span class="ty">${v.trichYeu}</span></div>`).join('')}
+            </div>
+          </div>`;
+        }).join('');
+
+    veBieuDoDonut(chuaXL, dangXL, hoanTat, quaHan);
+  }
+
+  function toggleChiTietPhong(idx) {
+    const el = document.getElementById('ctphong-' + idx);
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  }
+
+  function veBieuDoDonut(chuaXL, dangXL, hoanTat, quaHan) {
+    const tong = chuaXL + dangXL + hoanTat + quaHan || 1;
+    const data = [
+      { nhan: 'Chưa xử lý', so: chuaXL, mau: 'var(--amber)' },
+      { nhan: 'Đang xử lý', so: dangXL, mau: 'var(--purple)' },
+      { nhan: 'Hoàn tất', so: hoanTat, mau: 'var(--green)' },
+      { nhan: 'Quá hạn', so: quaHan, mau: 'var(--pink)' }
+    ];
+    let acc = 0; const parts = [];
+    data.forEach(d => {
+      const start = (acc/tong)*360; acc += d.so; const end = (acc/tong)*360;
+      parts.push(`${d.mau} ${start}deg ${end}deg`);
+    });
+    document.getElementById('bieuDoDonut').style.background = `conic-gradient(${parts.join(',')})`;
+    document.getElementById('bieuDoDonut').style.borderRadius = '50%';
+    document.getElementById('bieuDoDonut').style.setProperty('mask', 'radial-gradient(circle, transparent 55%, black 56%)');
+    document.getElementById('bieuDoDonut').style.setProperty('-webkit-mask', 'radial-gradient(circle, transparent 55%, black 56%)');
+
+    document.getElementById('chuThichDonut').innerHTML = data.map(d =>
+      `<div class="chu-thich-dong"><span class="cham" style="background:${d.mau}"></span>${d.nhan}: ${d.so}</div>`
+    ).join('');
+  }
+
+  function xuatBaoCao() {
+    goiAPI_Get('tongquan').then(kq => {
+      if (!kq.thanhCong) return;
+      let csv = 'Phòng,Số ký hiệu,Trích yếu,Hạn xử lý,Trạng thái\n';
+      for (const phong in kq.theoPhong) {
+        kq.theoPhong[phong].forEach(v => {
+          csv += `"${phong}","${v.soKyHieu}","${v.trichYeu.replace(/"/g,'""')}","${v.hanXuLy}","${v.trangThai}"\n`;
+        });
+      }
+      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `bao-cao-van-ban-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+    });
+  }
+
+  // ================= DASHBOARD PHÒNG =================
+  function hienDashboard() {
+    dongDrawer();
+    document.getElementById('manTongQuan').style.display = 'none';
+    document.getElementById('manAdmin').style.display = 'none';
+    document.getElementById('manDashboard').style.display = 'block';
+    setActiveMenu(1);
+
+    const tenPhong = localStorage.getItem('tvt_ten');
+    document.getElementById('khoiTaiVanBanCanTheoDoi').style.display =
+      (tenPhong === PHONG_DUOC_TAI_VANBAN_CAN_THEO_DOI || vaiTroHienTai === 'Admin') ? 'block' : 'none';
+
+    taiNhiemVuPhong();
+  }
+
+  async function taiNhiemVuPhong() {
+    const kq = await goiAPI_Get('nhiemvu', { token });
+    if (!kq.thanhCong) { alert(kq.thongBao); dangXuat(); return; }
+    danhSachNhiemVuPhong = kq.nhiemVu;
+    renderTabNhiemVu();
+  }
+
+  function doiTabNhiemVu(tab) {
+    tabNhiemVuHienTai = tab;
+    document.getElementById('tabDangXL').classList.toggle('active', tab === 'dangxuly');
+    document.getElementById('tabDaXL').classList.toggle('active', tab === 'daxuly');
+    renderTabNhiemVu();
+  }
+
+  function renderTabNhiemVu() {
+    const dangXL = danhSachNhiemVuPhong.filter(v => v.trangThai !== 'Hoàn thành');
+    const daXL = danhSachNhiemVuPhong.filter(v => v.trangThai === 'Hoàn thành');
+
+    document.getElementById('demTabDang').textContent = dangXL.length;
+    document.getElementById('demTabDa').textContent = daXL.length;
+
+    const dsHienThi = tabNhiemVuHienTai === 'dangxuly' ? dangXL : daXL;
+    const container = document.getElementById('dsNhiemVuPhong');
+
+    if (dsHienThi.length === 0) {
+      container.innerHTML = `<div class="rong">${tabNhiemVuHienTai === 'dangxuly' ? 'Không có nhiệm vụ nào đang xử lý.' : 'Chưa có nhiệm vụ nào đã xử lý xong.'}</div>`;
+      return;
+    }
+
+    container.innerHTML = dsHienThi.map((item) => {
+      const idx = danhSachNhiemVuPhong.indexOf(item);
+      const xong = item.trangThai === 'Hoàn thành';
+      const choXN = item.trangThai === 'Chờ xác nhận';
+      const lop = xong ? 'xong' : choXN ? 'choxn' : phanLoaiHan(item.hanXuLy, item.trangThai) === 'qh' ? 'qh' : phanLoaiHan(item.hanXuLy, item.trangThai) === 'gan' ? 'gan' : '';
+      return `
+        <div class="the-nhiemvu ${lop}">
+          <div class="sky">${item.soKyHieu}</div>
+          <div class="ty">${item.trichYeu}</div>
+          <div class="tt">${item.tomTat}</div>
+          <div class="tt">Hạn: ${item.hanXuLy || '—'} · Trạng thái: <b>${item.trangThai}</b></div>
+          ${item.vanBanThucHien ? `<div class="tt" style="color:var(--green)">✅ ${item.vanBanThucHien}</div>` : ''}
+          <div class="hang-nut">
+            <a class="btn-sm link" href="${item.xemVanBan}" target="_blank">Xem văn bản gốc</a>
+            ${!xong && !choXN ? `<button class="btn-sm xanh" onclick="hienFormHT(${idx})">Hoàn thành</button>` : ''}
+            ${choXN ? `<button class="btn-sm xanh" onclick="xacNhan(${item.dong})">Xác nhận</button><button class="btn-sm do" onclick="huyDeXuat(${item.dong})">Từ chối</button>` : ''}
+          </div>
+          <div class="form-hoanthanh" id="formht-${idx}">
+            <textarea id="noidunght-${idx}" placeholder="VD: Công văn số 45/UBND-PKT ngày 15/07/2026"></textarea>
+            <button class="btn-sm xanh" onclick="luuHoanThanh(${idx})">Lưu</button>
+            <button class="btn-sm phu" onclick="hienFormHT(${idx})">Hủy</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function hienFormHT(idx) {
+    const el = document.getElementById('formht-' + idx);
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  }
+
+  async function luuHoanThanh(idx) {
+    const noiDung = document.getElementById('noidunght-' + idx).value.trim();
+    if (!noiDung) { alert('Vui lòng nhập văn bản thực hiện.'); return; }
+    const kq = await goiAPI_Post({ action: 'capNhatHoanThanh', token, soDong: danhSachNhiemVuPhong[idx].dong, vanBanThucHien: noiDung });
+    if (kq.thanhCong) { tabNhiemVuHienTai = 'daxuly'; doiTabNhiemVu('daxuly'); taiNhiemVuPhong(); }
+    else alert(kq.thongBao);
+  }
+
+  async function xacNhan(soDong) {
+    const kq = await goiAPI_Post({ action: 'xacNhanHoanThanh', token, soDong });
+    if (kq.thanhCong) { doiTabNhiemVu('daxuly'); taiNhiemVuPhong(); } else alert(kq.thongBao);
+  }
+  async function huyDeXuat(soDong) {
+    if (!confirm('Từ chối đề xuất của AI và trả về "Đang xử lý"?')) return;
+    const kq = await goiAPI_Post({ action: 'huyDeXuatAI', token, soDong });
+    if (kq.thanhCong) taiNhiemVuPhong(); else alert(kq.thongBao);
+  }
+
+  function taiLenVanBan() {
+    const fileInput = document.getElementById('fileUpload');
+    const ketQuaEl = document.getElementById('ketQuaUpload');
+    if (!fileInput.files.length) { ketQuaEl.textContent = 'Vui lòng chọn file.'; return; }
+    const file = fileInput.files[0];
+    ketQuaEl.textContent = 'Đang tải lên và phân tích...';
+
+    const reader = new FileReader();
+    reader.onload = async function() {
+      const base64 = reader.result.split(',')[1];
+      const kq = await goiAPI_Post({ action: 'uploadVanBanPhong', token, tenFile: file.name, base64Data: base64, mimeType: file.type });
+      ketQuaEl.textContent = kq.thongBao || (kq.thanhCong ? 'Thành công.' : 'Có lỗi xảy ra.');
+      if (kq.thanhCong) { fileInput.value = ''; taiNhiemVuPhong(); }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function taiLenVanBanCanTheoDoi() {
+    const fileInput = document.getElementById('fileVanBanCanTheoDoi');
+    const ketQuaEl = document.getElementById('ketQuaTaiVanBanCanTheoDoi');
+    if (!fileInput.files.length) { ketQuaEl.textContent = 'Vui lòng chọn file.'; return; }
+    const file = fileInput.files[0];
+    ketQuaEl.textContent = 'Đang tải lên và AI đang phân tích, vui lòng chờ...';
+
+    const reader = new FileReader();
+    reader.onload = async function() {
+      const base64 = reader.result.split(',')[1];
+      const kq = await goiAPI_Post({ action: 'uploadVanBanMoi', token, tenFile: file.name, base64Data: base64, mimeType: file.type });
+      ketQuaEl.textContent = kq.thongBao || (kq.thanhCong ? 'Thành công.' : 'Có lỗi xảy ra.');
+      if (kq.thanhCong) { fileInput.value = ''; taiTongQuan(); }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ================= MÀN ADMIN =================
+  function hienAdmin() {
+    dongDrawer();
+    document.getElementById('manTongQuan').style.display = 'none';
+    document.getElementById('manDashboard').style.display = 'none';
+    document.getElementById('manAdmin').style.display = 'block';
+    setActiveMenu(2);
+    taiDanhSachTK();
+  }
+
+  async function themTaiKhoanMoi() {
+    const ten = document.getElementById('tenTKMoi').value.trim();
+    const mk = document.getElementById('mkTKMoi').value.trim();
+    if (!ten || !mk) { alert('Nhập đủ tên và mật khẩu.'); return; }
+    const kq = await goiAPI_Post({ action: 'themTaiKhoan', token, tenMoi: ten, matKhauMoi: mk, vaiTroMoi: 'Phong' });
+    if (kq.thanhCong) { document.getElementById('tenTKMoi').value=''; document.getElementById('mkTKMoi').value=''; taiDanhSachTK(); }
+    else alert(kq.thongBao);
+  }
+
+  async function taiDanhSachTK() {
+    const kq = await goiAPI_Get('danhsachtk', { token });
+    if (!kq.thanhCong) { alert(kq.thongBao); return; }
+    document.getElementById('dsTaiKhoanAdmin').innerHTML = kq.danhSach.map(tk => `
+      <div class="the-nhiemvu">
+        <div class="sky">${tk.tenPhong} ${tk.vaiTro === 'Admin' ? '👑' : ''}</div>
+        <div class="tt">Mật khẩu: <b>${tk.matKhau}</b></div>
+        <div class="hang-nut">
+          <button class="btn-sm tim" onclick="doiMK(${tk.dong})">Đổi mật khẩu</button>
+          ${tk.vaiTro !== 'Admin' ? `<button class="btn-sm do" onclick="xoaTK(${tk.dong})">Xóa</button>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  async function doiMK(soDong) {
+    const mkMoi = prompt('Nhập mật khẩu mới:');
+    if (!mkMoi) return;
+    const kq = await goiAPI_Post({ action: 'doiMatKhau', token, soDong, matKhauMoi: mkMoi });
+    if (kq.thanhCong) taiDanhSachTK(); else alert(kq.thongBao);
+  }
+  async function xoaTK(soDong) {
+    if (!confirm('Xóa tài khoản này?')) return;
+    const kq = await goiAPI_Post({ action: 'xoaTaiKhoan', token, soDong });
+    if (kq.thanhCong) taiDanhSachTK(); else alert(kq.thongBao);
+  }
+</script>
+</body>
+</html>
