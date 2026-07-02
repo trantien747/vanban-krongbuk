@@ -155,10 +155,11 @@
     display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 6px;
     font-size: 12.5px; font-weight: 600; margin-bottom: 4px;
   }
-  .the-nguoixuly.dang { background: rgba(181,117,15,0.12); color: var(--amber); }
-  .the-nguoixuly.xong { background: rgba(47,107,71,0.12); color: var(--green); }
-  .the-nguoixuly.choxn { background: rgba(138,90,48,0.12); color: var(--bronze); }
-  .the-nguoixuly.qh { background: rgba(179,65,60,0.12); color: var(--pink); }
+  .the-nguoixuly.thuong { background: rgba(26,115,199,0.14); color: var(--accent-dark); }
+  .the-nguoixuly.gan { background: rgba(181,117,15,0.18); color: #8a5a09; }
+  .the-nguoixuly.xong { background: rgba(47,107,71,0.18); color: #1f4a31; }
+  .the-nguoixuly.choxn { background: rgba(138,90,48,0.18); color: #5f3d21; }
+  .the-nguoixuly.qh { background: rgba(179,65,60,0.18); color: #8a2620; }
 
   /* Khung xem PDF nhúng */
   .khung-xem-pdf { margin-top: 14px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: none; }
@@ -425,7 +426,7 @@
 <div class="modal-nen" id="modalDangNhap">
   <div class="modal-box">
     <h2>🔒 Đăng nhập</h2>
-    <input type="text" id="inputTaiKhoan" placeholder="Tên phòng/đơn vị hoặc Quản trị viên">
+    <input type="text" id="inputTaiKhoan" placeholder="Tên đăng nhập (VD: phongkinhte)">
     <input type="password" id="inputMatKhau" placeholder="Mật khẩu">
     <button class="btn-full chinh" onclick="xuLyDangNhap()">Đăng nhập</button>
     <button class="btn-full phu" onclick="dongModalDangNhap()">Hủy</button>
@@ -560,8 +561,17 @@
     if (soNgay <= 3) return 'gan';
     return 'thuong';
   }
-  function nhanTrangThai(lop) {
-    return { qh: 'Quá hạn', gan: 'Sắp đến hạn', xong: 'Hoàn thành', choxn: 'Chờ xác nhận', thuong: 'Đang xử lý' }[lop];
+  // Số ngày lệch so với hôm nay: âm = còn bao nhiêu ngày, dương = đã quá hạn bao nhiêu ngày
+  function soNgayLech(hanStr) {
+    const han = parseHanDate(hanStr);
+    if (!han) return null;
+    const homNay = new Date(); homNay.setHours(0,0,0,0);
+    return Math.round((homNay - han) / 86400000);
+  }
+  function nhanTrangThai(lop, hanStr) {
+    if (lop === 'qh') { const n = soNgayLech(hanStr); return n ? `Quá hạn ${n} ngày` : 'Quá hạn'; }
+    if (lop === 'gan') { const n = soNgayLech(hanStr); return (n !== null && n < 0) ? `Còn ${Math.abs(n)} ngày` : 'Sắp đến hạn'; }
+    return { xong: 'Hoàn thành', choxn: 'Chờ xác nhận', thuong: 'Đang xử lý' }[lop] || lop;
   }
 
   function capNhatBadgeSidebar() {
@@ -776,7 +786,7 @@
         <div class="sky">${ch(v.soKyHieu)}</div>
         <div class="ty">${ch(v.trichYeu)}</div>
         <div class="meta">
-          <span><span class="cham-trangthai ${lop}"></span>${nhanTrangThai(lop)}</span>
+          <span><span class="cham-trangthai ${lop}"></span>${nhanTrangThai(lop, v.hanXuLy)}</span>
           <span>${formatHan(v.hanXuLy)}</span>
         </div>
       </div>`;
@@ -807,21 +817,10 @@
     const dong = coQuyenThaoTac ? timSoDongTrongNhiemVu(v.soKyHieu) : null;
     const linkNhung = layLinkNhungDrive(v.xemVanBan);
 
-    // ---- Thanh công cụ trên cùng ----
+    // ---- Thanh công cụ trên cùng: chỉ còn nút Xem văn bản ----
     const toolbar = document.getElementById('detailToolbar');
-    let nutHanhDong = '';
-    if (coQuyenThaoTac && choXN) {
-      nutHanhDong = `
-        <button class="btn-toolbar xanh-la dam" onclick="xacNhan(${dong})">✓ Xác nhận hoàn thành</button>
-        <button class="btn-toolbar do" onclick="huyDeXuat(${dong})">✕ Từ chối đề xuất</button>`;
-    } else if (coQuyenThaoTac && !xong) {
-      nutHanhDong = `<button class="btn-toolbar xanh-la dam" onclick="toggleFormHoanThanh()">✓ Đánh dấu hoàn thành</button>`;
-    }
-    toolbar.style.display = 'flex';
-    toolbar.innerHTML = `
-      ${v.xemVanBan ? `<button class="btn-toolbar dam" onclick="toggleXemPDF()">📄 Xem văn bản</button>` : ''}
-      ${nutHanhDong}
-    `;
+    toolbar.style.display = v.xemVanBan ? 'flex' : 'none';
+    toolbar.innerHTML = v.xemVanBan ? `<button class="btn-toolbar dam" onclick="toggleXemPDF()">📄 Xem văn bản</button>` : '';
 
     // ---- Thẻ tệp đính kèm ----
     const dinhKemHtml = v.xemVanBan ? `
@@ -850,20 +849,35 @@
         </div>
       </div>`;
 
-    // ---- Khối "Thông tin xử lý" ----
+    // ---- Khối "Thông tin xử lý": badge trạng thái + hành động luôn hiện NGANG HÀNG, không cần bấm mở ----
+    let khoiHanhDong = '';
+    if (xong && v.vanBanThucHien) {
+      khoiHanhDong = `<div class="van-ban-da-thuc-hien" style="margin-top:10px;">✅ Đã thực hiện tại: ${ch(v.vanBanThucHien)}</div>`;
+    } else if (coQuyenThaoTac && choXN) {
+      khoiHanhDong = `
+        <div class="khoi-hanhdong-moi" style="margin-top:12px;">
+          <p style="font-size:12.5px; color:var(--text-dim); margin-bottom:10px;">Hệ thống AI đã đề xuất văn bản khớp với nhiệm vụ này.</p>
+          <div class="hang-nut">
+            <button class="btn-sm xanh" onclick="xacNhan(${dong})">✓ Xác nhận hoàn thành</button>
+            <button class="btn-sm do" onclick="huyDeXuat(${dong})">✕ Từ chối đề xuất</button>
+          </div>
+        </div>`;
+    } else if (coQuyenThaoTac && !xong) {
+      khoiHanhDong = `
+        <div class="khoi-hanhdong-moi" style="margin-top:12px;">
+          <textarea id="noiDungHT" placeholder="VD: Công văn số 45/UBND-PKT ngày 15/07/2026"></textarea>
+          <button class="btn-sm xanh" onclick="luuHoanThanhChiTiet(${dong})">✓ Hoàn thành</button>
+        </div>`;
+    }
+
     const thongTinXuLy = `
       <div class="khoi-thongtin">
         <div class="tieu-de-khoi">⚙️ Thông tin xử lý</div>
         <div class="noi-dung-khoi">
-          <span class="the-nguoixuly ${lop}">${nhanTrangThai(lop)}</span>
-          ${xong && v.vanBanThucHien ? `<div class="van-ban-da-thuc-hien" style="margin-top:10px;">✅ Đã thực hiện tại: ${ch(v.vanBanThucHien)}</div>` : ''}
-          ${coQuyenThaoTac && !xong && !choXN ? `
-            <div id="formHoanThanh" style="display:none; margin-top:12px;">
-              <div class="khoi-hanhdong-moi">
-                <textarea id="noiDungHT" placeholder="VD: Công văn số 45/UBND-PKT ngày 15/07/2026"></textarea>
-                <button class="btn-sm xanh" onclick="luuHoanThanhChiTiet(${dong})">✓ Hoàn thành</button>
-              </div>
-            </div>` : ''}
+          <div class="hang-trangthai-hanhdong">
+            <span class="the-nguoixuly ${lop}">${nhanTrangThai(lop, v.hanXuLy)}</span>
+          </div>
+          ${khoiHanhDong}
         </div>
       </div>`;
 
@@ -879,7 +893,7 @@
 
     document.getElementById('noiDungChiTiet').innerHTML = `
       <div class="detail-title-row"><span class="ma">[${ch(v.soKyHieu)} - ${formatHan(v.hanXuLy)}]</span> ${ch(v.trichYeu)}</div>
-      <div class="detail-subline"><b>${ch(v.phong) || 'Chưa phân loại'}</b> · ${nhanTrangThai(lop)}</div>
+      <div class="detail-subline"><b>${ch(v.phong) || 'Chưa phân loại'}</b> · ${nhanTrangThai(lop, v.hanXuLy)}</div>
       ${dinhKemHtml}
       ${thongTinVanBan}
       ${thongTinXuLy}
@@ -1057,16 +1071,19 @@
     if (!kq.thanhCong) { document.getElementById('noiDungChiTiet').innerHTML = `<p>${kq.thongBao}</p>`; return; }
     let html = `
       <h3 style="font-family:var(--font-serif); font-size:18px; margin-bottom:16px;">Quản trị tài khoản</h3>
-      <div class="khoi-upload" style="max-width:400px;">
+      <div class="khoi-upload" style="max-width:420px;">
         <b>➕ Thêm tài khoản mới</b>
-        <input type="text" id="tenTKMoi" placeholder="Tên phòng/đơn vị" style="width:100%;padding:8px;margin:8px 0;background:var(--bg-panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);">
+        <p style="font-size:11.5px; color:var(--text-dim); margin:6px 0 8px;">Tên phòng dùng để khớp đúng "Phòng xử lý" trong dữ liệu — giữ nguyên đầy đủ dấu. Tên đăng nhập là chuỗi ngắn không dấu để phòng gõ khi vào web.</p>
+        <input type="text" id="tenPhongTKMoi" placeholder="Tên phòng/đơn vị (VD: Phòng Kinh tế)" style="width:100%;padding:8px;margin-bottom:8px;background:var(--bg-panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);">
+        <input type="text" id="tenDangNhapTKMoi" placeholder="Tên đăng nhập (VD: phongkinhte)" style="width:100%;padding:8px;margin-bottom:8px;background:var(--bg-panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);">
         <input type="text" id="mkTKMoi" placeholder="Mật khẩu" style="width:100%;padding:8px;margin-bottom:8px;background:var(--bg-panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);">
         <button class="btn-sm xanh" onclick="themTaiKhoanMoi()">Thêm tài khoản</button>
       </div>
     `;
     html += kq.danhSach.map(tk => `
       <div class="the-tk">
-        <div class="ten-tk">${tk.tenPhong} ${tk.vaiTro === 'Admin' ? '👑' : ''}</div>
+        <div class="ten-tk">${ch(tk.tenPhong)} ${tk.vaiTro === 'Admin' ? '👑' : ''}</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">Tên đăng nhập: <b style="color:var(--text)">${ch(tk.tenDangNhap) || '—'}</b></div>
         <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Mật khẩu: <b style="color:var(--text)">${tk.matKhau}</b></div>
         <div class="hang-nut">
           <button class="btn-sm vang" onclick="doiMK(${tk.dong})">Đổi mật khẩu</button>
@@ -1076,11 +1093,12 @@
     document.getElementById('noiDungChiTiet').innerHTML = html;
   }
   async function themTaiKhoanMoi() {
-    const ten = document.getElementById('tenTKMoi').value.trim();
+    const tenPhong = document.getElementById('tenPhongTKMoi').value.trim();
+    const tenDangNhap = document.getElementById('tenDangNhapTKMoi').value.trim();
     const mk = document.getElementById('mkTKMoi').value.trim();
-    if (!ten || !mk) { alert('Nhập đủ tên và mật khẩu.'); return; }
-    const kq = await goiAPI_Post({ action: 'themTaiKhoan', token, tenMoi: ten, matKhauMoi: mk, vaiTroMoi: 'Phong' });
-    if (kq.thanhCong) { taiDanhSachTK(); await taiDuLieuCongKhai(); } else alert(kq.thongBao);
+    if (!tenPhong || !tenDangNhap || !mk) { alert('Nhập đủ tên phòng, tên đăng nhập và mật khẩu.'); return; }
+    const kq = await goiAPI_Post({ action: 'themTaiKhoan', token, tenPhongMoi: tenPhong, tenDangNhapMoi: tenDangNhap, matKhauMoi: mk, vaiTroMoi: 'Phong' });
+    if (kq.thanhCong) { taiDanhSachTK(); await lamMoiDuLieuNen(); } else alert(kq.thongBao);
   }
   async function doiMK(soDong) {
     const mkMoi = prompt('Nhập mật khẩu mới:'); if (!mkMoi) return;
